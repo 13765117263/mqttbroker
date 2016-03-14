@@ -8,5 +8,40 @@ npm install moment<br>
 npm install fluent-ffmpeg
 
 #Startup
+cd /
+git clone https://github.com/aesirteam/mqttbroker.git
+cd mqttbroker
 node mqtt_server.js
 
+#Install service for redhat linux
+vi /etc/rc.d/init.d/mqttbroker
+
+#/bin/bash
+#chkconfig: 2345 80 90
+#description: auto_run
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+start() {
+   [ -f /mqttbroker/mqtt_server.js ] || exit 6
+   [ -f /mqttbroker/mongo.js ] || exit 6
+   su - root -c "nohup /usr/local/nodejs/bin/node /mqttbroker/mqtt_server.js >/dev/null 2>&1 &"
+}
+
+stop() {
+  killall node
+}
+
+case "$1" in
+   start)
+      start
+      ;;
+   stop)
+      stop
+      ;;
+ esac
+
+chmod +x /etc/rc.d/init.d/mqttbroker
+chkconfig --add mqttbroker
+service mqttbroker start
