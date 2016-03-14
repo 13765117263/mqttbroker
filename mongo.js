@@ -6,8 +6,10 @@ var MongoClient = require('mongodb').MongoClient
     , ffmpeg = require('./ffmpeg')
     , moment = require('moment');
 
-hosts = {
-    'MYF-ZHONGKUI-L1':'127.0.0.1'
+var rtspServers = {
+    'MYF-ZHONGKUI-L1': 'rtsp://127.0.0.1:1935',
+    'dev-spzb02-253-163': 'rtsp://10.201.253.163:1935',
+    'dev-spzb03-253-164': 'rtsp://10.201.253.164:1935'
 }
 
 exports.MongoDB = function (mongo_url, callback) {
@@ -28,20 +30,20 @@ exports.MongoDB = function (mongo_url, callback) {
         }
 
         event.on('insert', function (tablename, data, topic) {
-            db.collection(tablename).insert(data, function (err, docs) {
+            db.collection(tablename).insertOne(data, function (err, docs) {
                 if (err)
                     console.error(err);
                 else
-                    console.log('insert %s: {n:%d, _id:%s, topic:%s}', tablename, docs.result.n, docs.insertedIds, topic);
+                    console.log('insert %s: {n:%d, _id:%s, topic:%s}', tablename, docs.result.n, docs.insertedId, topic);
             });
         });
 
         event.on('update', function (tablename, data, criteria, topic) {
-            db.collection(tablename).update(criteria, {'$set': data}, function (err, docs) {
+            db.collection(tablename).updateOne(criteria, {'$set': data}, function (err, docs) {
                 if (err)
                     console.error(err);
                 else
-                    console.log('update %s: {n:%d, topic:%s}', tablename, docs.result.n, topic);
+                    console.log('update %s: {n:%d, topic:%s}', tablename, docs.result.nModified, topic);
             });
         });
 
@@ -96,7 +98,7 @@ exports.MongoDB = function (mongo_url, callback) {
         if (getObjectData(payload, data)) {
             event.emit('insert', 'screenfiles', data, topic);
             if (null != data.screenFile) {
-                ffmpeg("rtsp://".concat((hosts == null) ? data.host : hosts[data.host], ':1935', '/', data.appName, '/', data.streamName)
+                ffmpeg(rtspServers[data.host].concat('/', data.appName, '/', data.streamName)
                     , data.parentPath.concat('/', data.screenFile)
                     , dateFormat(data.updateTime)
                     , data.screenLarge);
