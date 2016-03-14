@@ -6,7 +6,7 @@ var ffmpeg = require('fluent-ffmpeg')
 
 module.exports = function (srcFile, imageFile, text, large) {
     var scale = (false === large) ? 'scale=284:-1,' : '';
-    var drawtext = util.format("drawtext=fontcolor=white:x=(w-tw)-5:y=(h-th)-5:text='%s'", text);
+    var drawtext = util.format("drawtext=fontfile=arial.ttf:fontcolor=white:x=(w-tw)-5:y=(h-th)-5:text='%s'", text);
     //console.log(util.format('%s%s',scale, drawtext));
     ffmpeg(srcFile)
         .addOption('-threads', 2)

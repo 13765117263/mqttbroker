@@ -3,9 +3,15 @@ var mqtt = require('mqtt')
     , websocket = require('websocket-stream')
     , WebSocketServer = require('ws').Server
     , Connection = require('mqtt-connection')
-    , http = require('http');
+    , http = require('http')
+    , express = require('express');
 
-var db = new Mongodb('mongodb://sa:Mongodb2016@localhost:27017/wms', function(err, msg){
+DEBUG = true;
+
+var mongo_url = DEBUG ?  'mongodb://localhost:27017/wms'
+    : 'mongodb://sa:Mongodb2016@localhost:27017/wms';
+
+var db = new Mongodb(mongo_url, function(err, msg){
     if(err) throw err;
     console.log(msg);
 });
@@ -116,4 +122,81 @@ function attachWebsocketServer(wsServer, handle) {
 new mqtt.Server(handle).listen(1883);
 attachWebsocketServer(http.createServer(),handle).listen(9999);
 
+if (DEBUG) {
+    var authinfo = JSON.stringify(
+        {
+            userName:"admin",
+            password:"123456",
+            streams:[
+                {
+                    "appName":"live"
+                    , "streamName":"myStream"
+                    , "protocol":"rtmp"
+                    , "allowHost":[
+                    "MYF-ZHONGKUI-L1"
+                ]
+                    , "edges":[
+                    {"ip":"127.0.0.1","dstApp":"live1","dstStream":"myStream"}
+                ]
+                    , "timerTasks": {"report":10, "screenshot":10}
+                },
+                /*record : segmentType: string
+                 values: ["none", "duration", "size", "schedule"]
+                 segmentParam:
+                 segmentType = none      value: null
+                 segmentType = duration  value: long (unit: Seconds  ex: 1Hour 60 * 60 * 1000)
+                 segmentType = size      value: long (unit: Bytes    ex: 10MB  10 * 1024 * 1024) */
+                //segmentType = schedule  value: string (ex: EveryHour 0 */1 * * *)
+                {
+                    "appName":"live"
+                    , "streamName":"test"
+                    , "allowHost":[
+                    "MYF-ZHONGKUI-L1"
+                ]
+                    , "edges":[
+                    {"ip":"127.0.0.1", "dstApp":"live1"}
+                ]
+                    , "record":{"segmentType":"duration","segmentParam":60, "segmentCover":true}
+                }
+            ]
+        }
+    );
 
+    var edgeinfo = JSON.stringify(
+        {
+            userName:"admin",
+            password:"123456",
+            streams:[
+                {
+                    "appName":"live1"
+                    , "streamName":"myStream"
+                    , "allowHost":[
+                    "MYF-ZHONGKUI-L1"
+                ]
+                },
+                {
+                    "appName":"live1"
+                    , "streamName":"test"
+                    , "allowHost":[
+                    "MYF-ZHONGKUI-L1"
+                ]
+                }
+            ]
+        }
+    );
+
+    var app = express();
+    app.get('/vap/json/authinfo.json', function(req, res){
+        //console.log(req.param('username'));
+        res.setHeader('Content-Type', 'application/json;charset=utf-8');
+        res.send(authinfo);
+    });
+
+    app.get('/vap/json/edgeinfo.json', function(req, res){
+        //console.log(req.param('username'));
+        res.setHeader('Content-Type', 'application/json;charset=utf-8');
+        res.send(edgeinfo);
+    });
+
+    app.listen(8080);
+}

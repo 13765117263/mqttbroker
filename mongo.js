@@ -6,6 +6,10 @@ var MongoClient = require('mongodb').MongoClient
     , ffmpeg = require('./ffmpeg')
     , moment = require('moment');
 
+hosts = {
+    'MYF-ZHONGKUI-L1':'127.0.0.1'
+}
+
 exports.MongoDB = function (mongo_url, callback) {
     var server_opt = {
         server: {
@@ -92,7 +96,7 @@ exports.MongoDB = function (mongo_url, callback) {
         if (getObjectData(payload, data)) {
             event.emit('insert', 'screenfiles', data, topic);
             if (null != data.screenFile) {
-                ffmpeg("rtsp://".concat(data.host, ':1935', '/', data.appName, '/', data.streamName)
+                ffmpeg("rtsp://".concat((hosts == null) ? data.host : hosts[data.host], ':1935', '/', data.appName, '/', data.streamName)
                     , data.parentPath.concat('/', data.screenFile)
                     , dateFormat(data.updateTime)
                     , data.screenLarge);
