@@ -5,7 +5,8 @@ npm install websocket-stream<br>
 npm install ws<br>
 npm install mongodb<br>
 npm install moment<br>
-npm install fluent-ffmpeg
+npm install fluent-ffmpeg<br>
+npm install express
 
 #Startup
 cd /<br>
