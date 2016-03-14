@@ -18,30 +18,30 @@ vi /etc/rc.d/init.d/mqttbroker<br>
 
 \#/bin/bash<br>
 \#chkconfig: 2345 80 90<br>
-#description: auto_run
+\#description: auto_run<br>
 
-# source function library
-. /etc/rc.d/init.d/functions
+\# source function library<br>
+. /etc/rc.d/init.d/functions<br>
 
-start() {
-   [ -f /mqttbroker/mqtt_server.js ] || exit 6
-   [ -f /mqttbroker/mongo.js ] || exit 6
-   su - root -c "nohup /usr/local/nodejs/bin/node /mqttbroker/mqtt_server.js >/dev/null 2>&1 &"
-}
+start() {<br>
+   [ -f /mqttbroker/mqtt_server.js ] || exit 6<br>
+   [ -f /mqttbroker/mongo.js ] || exit 6<br>
+   su - root -c "nohup /usr/local/nodejs/bin/node /mqttbroker/mqtt_server.js >/dev/null 2>&1 &"<br>
+}<br>
 
-stop() {
-  killall node
-}
+stop() {<br>
+  killall node<br>
+}<br>
 
-case "$1" in
-   start)
-      start
-      ;;
-   stop)
-      stop
-      ;;
- esac
+case "$1" in<br>
+   start)<br>
+      start<br>
+      ;;<br>
+   stop)<br>
+      stop<br>
+      ;;<br>
+ esac<br>
 
-chmod +x /etc/rc.d/init.d/mqttbroker
-chkconfig --add mqttbroker
-service mqttbroker start
+chmod +x /etc/rc.d/init.d/mqttbroker<br>
+chkconfig --add mqttbroker<br>
+service mqttbroker start<br>
