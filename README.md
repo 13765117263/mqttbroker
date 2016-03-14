@@ -1,10 +1,10 @@
 #Install dependency modules
-npm install mqtt
-npm install mqtt-connection
-npm install websocket-stream
-npm install ws
-npm install mongodb
-npm install moment
+npm install mqtt<br>
+npm install mqtt-connection<br>
+npm install websocket-stream<br>
+npm install ws<br>
+npm install mongodb<br>
+npm install moment<br>
 npm install fluent-ffmpeg
 
 #Startup
