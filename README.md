@@ -1,5 +1,5 @@
 #Install dependency modules
-npm install mqtt\r\n
+npm install mqtt<br>
 npm install mqtt-connection<br>
 npm install websocket-stream<br>
 npm install ws<br>
