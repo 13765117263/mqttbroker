@@ -8,10 +8,7 @@ var mqtt = require('mqtt')
 
 DEBUG = true;
 
-var mongo_url = DEBUG ?  'mongodb://localhost:27017/wms'
-    : 'mongodb://sa:Mongodb2016@localhost:27017/wms';
-
-var db = new Mongodb(mongo_url, function(err, msg){
+var db = new Mongodb('mongodb://sa:Mongodb2016@localhost:27017/wms', function(err, msg){
     if(err) throw err;
     console.log(msg);
 });
