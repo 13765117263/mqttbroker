@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MQTT JavaScript Test</title>
+    <script type="text/javascript" src="js/mqttws31-min.js"></script>
+    <script type="text/javascript" src="js/ws-client.js"></script>
+    <style>
+        input {
+            width: 100px;
+        }
+
+        div {
+            border: 1px solid #96c2f1;
+            background: #eff7ff
+        }
+    </style>
+</head>
+<body>
+<table>
+    <thead>
+    <img src="img/nodejs.png" style="height: 40px;">&nbsp;
+    <font size="10">MQTT Websocket Client</font><br>
+    </thead>
+    <tbody>
+    <table>
+        <tr>
+            <td>MQTT_HOST</td>
+            <td>MQTT_PORT</td>
+            <td>USER</td>
+            <td>PASS</td>
+            <td>CLIENT_ID</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><input type="text" id="host" value="127.0.0.1"/></td>
+            <td><input type="number" id="port" value="9999"/></td>
+            <td><input type="text" id="user" value="admin"/></td>
+            <td><input type="password" id="pwd"/ value="password"></td>
+            <td><input type="text" id="clientId" value="clientId_1234567"/></td>
+            <td>
+                <button onclick="connect()" id="btn_connect">connect</button>
+            </td>
+        </tr>
+        <tr>
+            <td><b>subscribe:</b></td>
+            <td colspan="5"><input type="text" id="subscribe" value="req/+/*/#" style="width: 100%;"></td>
+        </tr>
+        <tr>
+            <td colspan="6"><b>onMessageArrived:</b><label style="background: red;" id="errmsg"/></td>
+        </tr>
+        <tr>
+            <td valign="top">topic:</td>
+            <td colspan="5"><input type="text" id="topic"
+                                   style="width:100%; border:1px solid #96c2f1; background:#eff7ff" readonly></td>
+        </tr>
+        <tr>
+            <td valign="top">payload:</td>
+            <td colspan="5"><textarea id="payload"
+                                      style="width:100%; height:200px; border:1px solid #96c2f1; background:#eff7ff"
+                                      readonly></textarea></td>
+        </tr>
+    </table>
+    </tbody>
+    <tfoot>
+    <br>
+    ©2016 <b>AesirTeam</b>
+    </tfoot>
+</table>
+</body>
+</html>

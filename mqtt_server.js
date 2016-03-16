@@ -195,5 +195,12 @@ if (DEBUG) {
         res.send(edgeinfo);
     });
 
+    app.get('/', function(req, res) {
+        res.sendFile(__dirname.concat('/html/index.html'));
+    });
+
+    app.get('/:path/:filename', function(req, res) {
+        res.sendFile(__dirname.concat('/html/',req.params.path, '/',req.params.filename));
+    });
     app.listen(8080);
 }
