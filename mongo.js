@@ -3,7 +3,8 @@
  */
 var MongoClient = require('mongodb').MongoClient
     , EventEmitter = require('events').EventEmitter
-    , ffmpeg = require('./ffmpeg')
+    , util = require('util')
+    , FFMPEG = require('./ffmpeg').FFMPEG
     , moment = require('moment');
 
 var rtspServers = {
@@ -12,7 +13,7 @@ var rtspServers = {
     'dev-spzb03-253-164': 'rtsp://10.201.253.164:1935'
 }
 
-exports.MongoDB = function (mongo_url, callback) {
+function MongoDB(mongo_url, callback) {
     var server_opt = {
         server: {
             //auto_reconnect: true,
@@ -21,88 +22,91 @@ exports.MongoDB = function (mongo_url, callback) {
         }
     }
 
-    var event = new EventEmitter();
-
     MongoClient.connect(mongo_url, server_opt, function (err, db) {
         if (err) {
             callback(err);
             return;
         }
 
-        event.on('insert', function (tablename, data, topic) {
+        MongoDB.prototype.insert = function(tablename, data, topic) {
             db.collection(tablename).insertOne(data, function (err, docs) {
                 if (err)
                     console.error(err);
                 else
                     console.log('insert %s: {n:%d, _id:%s, topic:%s}', tablename, docs.result.n, docs.insertedId, topic);
             });
-        });
+        }
 
-        event.on('update', function (tablename, data, criteria, topic) {
+        MongoDB.prototype.update = function(tablename, data, criteria, topic) {
             db.collection(tablename).updateOne(criteria, {'$set': data}, function (err, docs) {
                 if (err)
                     console.error(err);
                 else
                     console.log('update %s: {n:%d, topic:%s}', tablename, docs.result.nModified, topic);
             });
-        });
+        }
 
+        EventEmitter.call(this);
         callback(null, "CONNECT: ".concat(mongo_url, " successful!"));
     });
+}
 
-    this.insertLivestreams = function (topic, payload) {
-        var data = {};
-        if (getObjectData(payload, data)) {
-            event.emit('insert', 'livestreams', data, topic);
-        }
+util.inherits(MongoDB, EventEmitter);
+exports.MongoDB = MongoDB;
+
+MongoDB.prototype.insertLivestreams = function (topic, payload) {
+    var data = {};
+    if (getObjectData(payload, data)) {
+        this.insert('livestreams', data, topic);
     }
+}
 
-    this.updateLivestreams = function (topic, payload) {
-        var data = {}, criteria = {};
-        if (getObjectData(payload, data, criteria)) {
-            criteria.active = 1;
-            event.emit('update', 'livestreams', data, criteria, topic);
-        }
+MongoDB.prototype.updateLivestreams = function (topic, payload) {
+    var data = {}, criteria = {};
+    if (getObjectData(payload, data, criteria)) {
+        criteria.active = 1;
+        this.update('livestreams', data, criteria, topic);
     }
+}
 
-    this.insertStreamreports = function (topic, payload) {
-        var data = {};
-        if (getObjectData(payload, data)) {
-            event.emit('insert', 'streamreports', data, topic);
-        }
+MongoDB.prototype.insertStreamreports = function (topic, payload) {
+    var data = {};
+    if (getObjectData(payload, data)) {
+        this.insert('streamreports', data, topic);
     }
+}
 
-    this.insertRecordfiles = function (topic, payload) {
-        var data = {};
-        if (getObjectData(payload, data)) {
-            event.emit('insert', 'recordfiles', data, topic);
-        }
+MongoDB.prototype.insertRecordfiles = function (topic, payload) {
+    var data = {};
+    if (getObjectData(payload, data)) {
+        this.insert('recordfiles', data, topic);
     }
+}
 
-    this.updateRecordfiles = function (topic, payload) {
-        var data = {}, criteria = {};
-        if (getObjectData(payload, data, criteria)) {
-            criteria.active = 1;
-            event.emit('update', 'recordfiles', data, criteria, topic);
-            if (null != data.coverFile) {
-                ffmpeg(data.parentPath.concat('/', data.fileName)
-                    , data.parentPath.concat('/', data.coverFile)
+MongoDB.prototype.updateRecordfiles = function (topic, payload) {
+    var data = {}, criteria = {};
+    if (getObjectData(payload, data, criteria)) {
+        criteria.active = 1;
+        this.update('recordfiles', data, criteria, topic);
+        if (null != data.coverFile) {
+            new FFMPEG(data.parentPath.concat('/', data.fileName))
+                .screenshot(data.parentPath.concat('/', data.coverFile)
                     , secondFormat(data.fileDuration)
                     , false);
-            }
         }
     }
+}
 
-    this.insertScreenfiles = function (topic, payload) {
-        var data = {};
-        if (getObjectData(payload, data)) {
-            event.emit('insert', 'screenfiles', data, topic);
-            if (null != data.screenFile) {
-                ffmpeg(rtspServers[data.host].concat('/', data.appName, '/', data.streamName)
-                    , data.parentPath.concat('/', data.screenFile)
+MongoDB.prototype.insertScreenfiles = function (topic, payload) {
+    var data = {};
+    if (getObjectData(payload, data)) {
+        this.insert('screenfiles', data, topic);
+        if (null != data.screenFile) {
+            new FFMPEG(rtspServers[data.host].concat('/', data.appName, '/', data.streamName))
+                .screenshot(data.parentPath.concat('/', data.screenFile)
                     , dateFormat(data.updateTime)
-                    , data.screenLarge);
-            }
+                    , data.screenLarge
+                );
         }
     }
 }
