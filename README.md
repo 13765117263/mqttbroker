@@ -1,5 +1,5 @@
 #Install dependency modules
-npm install mqtt mqtt-connection websocket-stream ws mongodb moment fluent-ffmpeg express
+npm install
 
 #Startup
 cd /<br>
@@ -39,3 +39,6 @@ case "$1" in<br>
 chmod +x /etc/rc.d/init.d/mqttbroker<br>
 chkconfig --add mqttbroker<br>
 service mqttbroker start<br>
+
+#MQTT JavaScript Test
+http://127.0.0.1:8080
