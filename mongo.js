@@ -64,6 +64,8 @@ function MongoDB(mongo_url, callback) {
     EventEmitter.call(this);
 }
 
+util.inherits(MongoDB, EventEmitter);
+
 MongoDB.prototype.insertLivestreams = function (topic, payload) {
     var obj = parseObjectData(payload);
     if (obj) {
@@ -167,5 +169,4 @@ var dateFormat = function (t) {
     return moment(t, "YYYY-MM-DD HH:mm:ss").format('YYYY/MM/DD HH:mm:ss').replace(/:/g, '\\:');
 }
 
-util.inherits(MongoDB, EventEmitter);
 module.exports = MongoDB;
