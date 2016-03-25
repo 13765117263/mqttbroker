@@ -25,9 +25,10 @@ function FFMPEG(mongodb, srcFile) {
     EventEmitter.call(this);
 }
 
+util.inherits(FFMPEG, EventEmitter);
+
 FFMPEG.prototype.screenshot = function(imageFile, text, large) {
     this.emit('screenshot',imageFile, text, large);
 }
 
-util.inherits(FFMPEG, EventEmitter);
 module.exports = FFMPEG;
