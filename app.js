@@ -1,5 +1,5 @@
 var mqtt = require('mqtt')
-    , Mongodb = require('./mongo').MongoDB
+    , Mongodb = require('./mongo')
     , websocket = require('websocket-stream')
     , WebSocketServer = require('ws').Server
     , Connection = require('mqtt-connection')

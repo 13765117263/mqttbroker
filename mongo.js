@@ -1,10 +1,12 @@
 /**
  * Created by zhongkui on 2016/3/14.
  */
-var MongoClient = require('mongodb').MongoClient
+var mongodb = require('mongodb')
+    , FFMPEG = require('./ffmpeg')
     , EventEmitter = require('events').EventEmitter
     , util = require('util')
-    , FFMPEG = require('./ffmpeg').FFMPEG
+    , fs = require('fs')
+    , Grid = require('gridfs-stream')
     , moment = require('moment');
 
 var rtspServers = {
@@ -22,118 +24,132 @@ function MongoDB(mongo_url, callback) {
         }
     }
 
-    MongoClient.connect(mongo_url, server_opt, function (err, db) {
+    var self = this;
+    mongodb.MongoClient.connect(mongo_url, server_opt, function (err, db) {
         if (err) {
             callback(err);
             return;
         }
-
-        MongoDB.prototype.insert = function(tablename, data, topic) {
-            db.collection(tablename).insertOne(data, function (err, docs) {
+        self.on('insertData', function (tablename, topic, obj) {
+            db.collection(tablename).insertOne(obj.data, function (err, docs) {
                 if (err)
                     console.error(err);
                 else
                     console.log('insert %s: {n:%d, _id:%s, topic:%s}', tablename, docs.result.n, docs.insertedId, topic);
             });
-        }
+        });
 
-        MongoDB.prototype.update = function(tablename, data, criteria, topic) {
-            db.collection(tablename).updateOne(criteria, {'$set': data}, function (err, docs) {
+        self.on('updateData', function (tablename, topic, obj) {
+            db.collection(tablename).updateOne(obj.criteria, {'$set': obj.data}, function (err, docs) {
                 if (err)
                     console.error(err);
                 else
                     console.log('update %s: {n:%d, topic:%s}', tablename, docs.result.nModified, topic);
             });
-        }
+        });
 
-        EventEmitter.call(this);
+        self.on('insertFs', function (imageFile) {
+            var gfs = Grid(db, mongodb);
+            var writestream = gfs.createWriteStream({filename: imageFile});
+            fs.createReadStream(imageFile).pipe(writestream);
+            writestream.on('close', function (file) {
+                fs.unlink(imageFile, function () {
+                    console.log(file.filename + ' Written To DB');
+                });
+            });
+        });
         callback(null, "CONNECT: ".concat(mongo_url, " successful!"));
     });
+
+    EventEmitter.call(this);
 }
 
-util.inherits(MongoDB, EventEmitter);
-exports.MongoDB = MongoDB;
-
 MongoDB.prototype.insertLivestreams = function (topic, payload) {
-    var data = {};
-    if (getObjectData(payload, data)) {
-        this.insert('livestreams', data, topic);
+    var obj = parseObjectData(payload);
+    if (obj) {
+        this.emit('insertData', 'livestreams', topic, obj);
     }
 }
 
 MongoDB.prototype.updateLivestreams = function (topic, payload) {
-    var data = {}, criteria = {};
-    if (getObjectData(payload, data, criteria)) {
-        criteria.active = 1;
-        this.update('livestreams', data, criteria, topic);
+    var obj = parseObjectData(payload);
+    if (obj) {
+        obj.criteria.active = 1;
+        this.emit('updateData', 'livestreams', topic, obj);
     }
 }
 
 MongoDB.prototype.insertStreamreports = function (topic, payload) {
-    var data = {};
-    if (getObjectData(payload, data)) {
-        this.insert('streamreports', data, topic);
+    var obj = parseObjectData(payload);
+    if (obj) {
+        this.emit('insertData', 'streamreports', topic, obj);
     }
 }
 
 MongoDB.prototype.insertRecordfiles = function (topic, payload) {
-    var data = {};
-    if (getObjectData(payload, data)) {
-        this.insert('recordfiles', data, topic);
+    var obj = parseObjectData(payload);
+    if (obj) {
+        this.emit('insertData', 'recordfiles', topic, obj);
     }
 }
 
 MongoDB.prototype.updateRecordfiles = function (topic, payload) {
-    var data = {}, criteria = {};
-    if (getObjectData(payload, data, criteria)) {
-        criteria.active = 1;
-        this.update('recordfiles', data, criteria, topic);
-        if (null != data.coverFile) {
-            new FFMPEG(data.parentPath.concat('/', data.fileName))
-                .screenshot(data.parentPath.concat('/', data.coverFile)
-                    , secondFormat(data.fileDuration)
+    var obj = parseObjectData(payload);
+    if (obj) {
+        obj.criteria.active = 1;
+        this.emit('updateData', 'recordfiles', topic, obj);
+        if (!!obj.data.coverFile && !!obj.data.parentPath && !!obj.data.fileName && !!obj.data.fileDuration) {
+            new FFMPEG(this, obj.data.parentPath.concat('/', obj.data.fileName))
+                .screenshot(obj.data.parentPath.concat('/', obj.data.coverFile)
+                    , secondFormat(obj.data.fileDuration)
                     , false);
         }
     }
 }
 
 MongoDB.prototype.insertScreenfiles = function (topic, payload) {
-    var data = {};
-    if (getObjectData(payload, data)) {
-        this.insert('screenfiles', data, topic);
-        if (null != data.screenFile) {
-            new FFMPEG(rtspServers[data.host].concat('/', data.appName, '/', data.streamName))
-                .screenshot(data.parentPath.concat('/', data.screenFile)
-                    , dateFormat(data.updateTime)
-                    , data.screenLarge
+    var obj = parseObjectData(payload);
+    if (obj) {
+        this.emit('insertData', 'screenfiles', topic, obj);
+        if (!!obj.data.screenFile && !!obj.criteria.host && !!obj.criteria.appName && !!obj.criteria.streamName && !!obj.data.parentPath && !!obj.data.updateTime) {
+            var rtsp = rtspServers[obj.criteria.host].concat('/', obj.criteria.appName, '/', obj.criteria.streamName);
+            new FFMPEG(this, rtsp)
+                .screenshot(obj.data.parentPath.concat('/', obj.data.screenFile)
+                    , dateFormat(obj.data.updateTime)
+                    , obj.data.screenLarge
                 );
         }
     }
 }
 
-var getObjectData = function (payload, data, criteria) {
+MongoDB.prototype.saveFileToGridfs = function (imageFile) {
+    if (imageFile) {
+        this.emit('insertFs', imageFile);
+    }
+}
+
+function parseObjectData(payload) {
     try {
         var req = JSON.parse(payload);
+        if (!req)
+            throw new Error('Payload parse fail');
         var msg = JSON.parse(req.msg);
-        if (msg != null) {
-            if (null == criteria) {
-                for (var k in msg)
-                    data[k] = msg[k];
-            } else {
-                var keys = /^(clientId|host|appName|streamName)$/;
-                for (var k in msg) {
-                    if (keys.test(k))
-                        criteria[k] = msg[k];
-                    else
-                        data[k] = msg[k];
-                }
-            }
-            return true;
-        }
+        if (!msg)
+            throw new Error('Msg is null');
     } catch (ex) {
         console.error(ex.message);
+        return null;
     }
-    return false;
+
+    var rval = {data: {}, criteria: {}};
+    var keys = /^(clientId|host|appName|streamName)$/;
+    for (var k in msg) {
+        if (keys.test(k))
+            rval.criteria[k] = msg[k];
+        else
+            rval.data[k] = msg[k]
+    }
+    return rval;
 }
 
 var secondFormat = function (s) {
@@ -150,3 +166,6 @@ var secondFormat = function (s) {
 var dateFormat = function (t) {
     return moment(t, "YYYY-MM-DD HH:mm:ss").format('YYYY/MM/DD HH:mm:ss').replace(/:/g, '\\:');
 }
+
+util.inherits(MongoDB, EventEmitter);
+module.exports = MongoDB;

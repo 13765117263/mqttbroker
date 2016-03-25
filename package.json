@@ -1,35 +1,30 @@
 {
   "name": "mqttbroker",
   "version": "1.0.0",
-  "description": "mqttbroker",
+  "description": "npm install",
   "main": "app.js",
-  "dependencies": {
-    "express": "^4.13.4",
-    "fluent-ffmpeg": "^2.0.1",
-    "moment": "^2.12.0",
-    "mongodb": "^2.1.7",
-    "mqtt": "^1.7.3",
-    "mqtt-connection": "^2.1.1",
-    "websocket-stream": "^3.1.0",
-    "ws": "^1.0.1"
-  },
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "none"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aesirteam/mqttbroker.git"
   },
-  "keywords": [
-    "mqtt",
-    "mongodb",
-    "ffmpeg"
-  ],
   "author": "zhongkui",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/aesirteam/mqttbroker/issues"
   },
-  "homepage": "https://github.com/aesirteam/mqttbroker#readme"
+  "homepage": "https://github.com/aesirteam/mqttbroker#readme",
+  "dependencies": {
+    "express": "^4.13.4",
+    "fluent-ffmpeg": "^2.0.1",
+    "gridfs-stream": "^1.1.1",
+    "moment": "^2.12.0",
+    "mongodb": "^2.1.11",
+    "mqtt": "^1.7.4",
+    "mqtt-connection": "^2.1.1",
+    "websocket-stream": "^3.1.0",
+    "ws": "^1.0.1"
+  }
 }
