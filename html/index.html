@@ -42,7 +42,8 @@
             <td><input type="password" id="pwd" value="password"></td>
             <td><input type="text" id="clientId" value="clientId"/></td>
             <script>
-                document.getElementById('clientId').value += '_'+location.hostname;;
+                document.getElementById('clientId').value += '_' + parseInt(Math.random()*100);
+                ;
             </script>
             <td>
                 <button onclick="connect()" id="btn_connect">connect</button>
