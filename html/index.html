@@ -34,10 +34,16 @@
         </tr>
         <tr>
             <td><input type="text" id="host" value="127.0.0.1"/></td>
+            <script>
+                document.getElementById('host').value = location.hostname;
+            </script>
             <td><input type="number" id="port" value="9999"/></td>
             <td><input type="text" id="user" value="admin"/></td>
-            <td><input type="password" id="pwd"/ value="password"></td>
-            <td><input type="text" id="clientId" value="clientId_1234567"/></td>
+            <td><input type="password" id="pwd" value="password"></td>
+            <td><input type="text" id="clientId" value="clientId"/></td>
+            <script>
+                document.getElementById('clientId').value += '_'+location.hostname;;
+            </script>
             <td>
                 <button onclick="connect()" id="btn_connect">connect</button>
             </td>
